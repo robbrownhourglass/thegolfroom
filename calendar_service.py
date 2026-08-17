@@ -54,9 +54,14 @@ Google account access):
      defaults to "primary" (Eamonn's own main calendar).
 
 Until step 7 is complete, `is_configured()` returns False and the booking
-page falls back to a plain contact form instead of showing a slot picker.
+page runs in DEMO MODE instead: it shows the real slot-picker UI against
+made-up sample availability (see `get_demo_slots` below) so the booking
+workflow can be built and tested end-to-end before Google Calendar is
+actually connected. The page clearly labels itself as demo/sample data —
+see the `demo` flag app.py passes to bookings.html.
 """
 import os
+import random
 import time
 from datetime import datetime, timedelta
 
@@ -171,6 +176,30 @@ def _overlaps(slot_start, slot_end, busy_periods):
     return False
 
 
+def _candidate_business_days(days_ahead=DAYS_AHEAD):
+    """Business days (skipping weekends) from today out to days_ahead, each
+    paired with its bookable candidate slot start times (respecting min notice)."""
+    today = datetime.now(BUSINESS_TZ).date()
+    earliest_bookable = datetime.now(BUSINESS_TZ) + timedelta(hours=MIN_NOTICE_HOURS)
+    out = []
+    for offset in range(days_ahead + 1):
+        day = today + timedelta(days=offset)
+        if day.weekday() not in BUSINESS_DAYS:
+            continue
+        candidates = [s for s in _business_slot_starts(day) if s >= earliest_bookable]
+        out.append((day, candidates))
+    return out
+
+
+def _slot_dict(slot_start):
+    return {
+        "start": slot_start,
+        "end": slot_start + timedelta(minutes=SESSION_MINUTES),
+        "iso": slot_start.isoformat(),
+        "label": slot_start.strftime("%-I:%M %p"),
+    }
+
+
 def get_available_slots(use_cache=True):
     """
     Returns a list of {date, label, slots: [{start, end, iso, label}, ...]}
@@ -187,35 +216,64 @@ def get_available_slots(use_cache=True):
         today + timedelta(days=DAYS_AHEAD), datetime.min.time(), tzinfo=BUSINESS_TZ
     )
     busy_periods = _fetch_busy_periods(range_start, range_end)
-    earliest_bookable = datetime.now(BUSINESS_TZ) + timedelta(hours=MIN_NOTICE_HOURS)
 
     days = []
-    for offset in range(DAYS_AHEAD + 1):
-        day = today + timedelta(days=offset)
-        if day.weekday() not in BUSINESS_DAYS:
-            continue
+    for day, candidates in _candidate_business_days():
         day_slots = []
-        for slot_start in _business_slot_starts(day):
+        for slot_start in candidates:
             slot_end = slot_start + timedelta(minutes=SESSION_MINUTES)
-            if slot_start < earliest_bookable:
-                continue
             if _overlaps(slot_start, slot_end, busy_periods):
                 continue
-            day_slots.append({
-                "start": slot_start,
-                "end": slot_end,
-                "iso": slot_start.isoformat(),
-                "label": slot_start.strftime("%-I:%M %p"),
-            })
-        days.append({
-            "date": day,
-            "label": day.strftime("%A %-d %B"),
-            "slots": day_slots,
-        })
+            day_slots.append(_slot_dict(slot_start))
+        days.append({"date": day, "label": day.strftime("%A %-d %B"), "slots": day_slots})
 
     _slots_cache["value"] = days
     _slots_cache["expires"] = now + CACHE_SECONDS
     return days
+
+
+# ---------------------------------------------------------------------------
+# Demo mode — used automatically while is_configured() is False, so the
+# booking workflow can be built/tested end-to-end before Eamonn's real
+# Google Calendar is connected. A couple of slots per day are randomly (but
+# stably — same result on every reload) marked "already booked", and
+# anything requested through the demo form is remembered in memory for the
+# rest of this process's lifetime (resets on server restart). No Google API
+# calls happen in this mode at all.
+# ---------------------------------------------------------------------------
+DEMO_BOOKED_PER_DAY = 2
+_demo_requested_slots = set()  # iso strings the tester has "requested" this session
+
+
+def get_demo_slots():
+    days = []
+    for day, candidates in _candidate_business_days():
+        rng = random.Random(day.toordinal())  # stable per calendar day, not per request
+        pre_booked = set(rng.sample(candidates, k=min(DEMO_BOOKED_PER_DAY, len(candidates))))
+        day_slots = [
+            _slot_dict(s) for s in candidates
+            if s not in pre_booked and s.isoformat() not in _demo_requested_slots
+        ]
+        days.append({"date": day, "label": day.strftime("%A %-d %B"), "slots": day_slots})
+    return days
+
+
+def create_demo_booking_request(slot_start_iso, name, email, phone, notes):
+    """Demo-mode stand-in for create_booking_request — never touches Google."""
+    try:
+        slot_start = datetime.fromisoformat(slot_start_iso)
+    except ValueError:
+        return False, "That slot looks invalid — please pick a time again."
+
+    earliest_bookable = datetime.now(BUSINESS_TZ) + timedelta(hours=MIN_NOTICE_HOURS)
+    if slot_start < earliest_bookable:
+        return False, "That slot is too soon to book online — please call or email us instead."
+
+    if slot_start_iso in _demo_requested_slots:
+        return False, "Sorry, that slot was just taken. Please pick another time."
+
+    _demo_requested_slots.add(slot_start_iso)
+    return True, None
 
 
 def create_booking_request(slot_start_iso, name, email, phone, notes):

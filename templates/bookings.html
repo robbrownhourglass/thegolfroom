@@ -12,6 +12,14 @@
 
 <section class="section-charcoal" style="padding-top: 60px;">
   <div class="wrap">
+    {% if demo %}
+    <div class="demo-banner">
+      <strong>Demo mode.</strong> Google Calendar isn't connected yet, so the slots below
+      are made-up sample availability (not real bookings) — this is here so the workflow
+      can be tested before it goes live. See <code>calendar_service.py</code> to connect
+      the real thing.
+    </div>
+    {% endif %}
     <form method="post" id="booking-form">
       <div class="slot-picker">
         {% set has_any_slots = days|selectattr('slots')|list|length > 0 %}

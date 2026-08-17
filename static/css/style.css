@@ -530,6 +530,18 @@ section { padding: 90px 0; }
 .info-strip a { text-decoration: underline; }
 
 /* Booking slot picker */
+.demo-banner {
+  max-width: 780px;
+  margin: 0 auto 2.5em;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  background: #4a3a10;
+  border: 1px solid #8a6a1f;
+  color: #f3d98b;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.demo-banner code { background: rgba(0,0,0,0.25); padding: 0.1em 0.4em; border-radius: 3px; }
 .slot-picker { max-width: 780px; margin: 0 auto; }
 .slot-day { margin-bottom: 2em; }
 .slot-day h3 {
