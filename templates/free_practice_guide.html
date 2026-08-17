@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Free Practice Guide | The Golf Room{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="wrap">
+    <h1>Free Practice Guide</h1>
+    <hr class="rule rule-bar">
+  </div>
+</div>
+
+<section class="section-green" style="padding: 0;">
+  <div class="two-col">
+    <div class="col-media">
+      <img src="{{ url_for('static', filename='images/programmes-photo.jpeg') }}" alt="Practice session at The Golf Room">
+    </div>
+    <div class="col-text">
+      <h2>Ready to get your free practice guide?</h2>
+      <p>Learn how to build a practice session like the pros that saves you shots.</p>
+      <ul style="color: var(--off-white); padding-left: 1.2em; line-height: 1.9;">
+        <li>8 key tips to help you prepare and lower your golf scores</li>
+        <li>Understand the 3 stages that develop new skills quicker</li>
+      </ul>
+      <form method="post" style="margin-top: 2em; max-width: 420px;">
+        <div style="margin-bottom: 14px;">
+          <label style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--off-white); margin-bottom:6px;">First name</label>
+          <input name="first_name" type="text" required style="width:100%; padding:12px 14px; border:1px solid #3a5a3d; border-radius:4px; background:#0c2a0f; color:#fff;">
+        </div>
+        <div style="margin-bottom: 14px;">
+          <label style="display:block; font-size:0.78rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--off-white); margin-bottom:6px;">Email</label>
+          <input name="email" type="email" required style="width:100%; padding:12px 14px; border:1px solid #3a5a3d; border-radius:4px; background:#0c2a0f; color:#fff;">
+        </div>
+        <button class="btn" type="submit">Subscribe</button>
+      </form>
+      <p style="font-size: 0.8rem; margin-top: 1.5em;">By completing this form and clicking Subscribe you are agreeing to receive updates about coaching offers and news by email from The Golf Room. We will not share or sell your personal information. You can unsubscribe at any time. Find out more in our Privacy Policy.</p>
+    </div>
+  </div>
+</section>
+{% endblock %}

@@ -1,0 +1,115 @@
+{% extends "base.html" %}
+{% block title %}The Golf Room | Golf Coaching | Rathevan, Portlaoise, Co. Laois, Ireland{% endblock %}
+
+{% block content %}
+<section class="hero">
+  <div class="hero-inner">
+    <img class="hero-badge" src="{{ url_for('static', filename='images/logo-badge.png') }}" alt="The Golf Room — Learn &amp; Perform">
+    <h1 class="hero-title">The Golf Room</h1>
+    <p class="hero-tagline">Transform Your Golf Game</p>
+    <div class="hero-cta">
+      <span class="btn-split">
+        <a class="btn" href="{{ url_for('bookings') }}">Book Now</a>
+        <span class="btn-arrow">&#8594;</span>
+      </span>
+    </div>
+    <div class="hero-social">
+      <a href="https://instagram.com" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='images/instagram-icon.png') }}" alt="Instagram"></a>
+      <a href="https://twitter.com" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='images/twitter-icon.png') }}" alt="Twitter"></a>
+    </div>
+  </div>
+</section>
+
+<section class="section-green" style="padding: 0;">
+  <div class="two-col">
+    <div class="col-text">
+      <h2>What is<br>The Golf Room</h2>
+      <hr class="rule">
+      <p>At The Golf Room, our focus is on what we can do for you, the client. Step into a space where every swing brings you closer to your golfing goals. The Golf Room is a haven for golf enthusiasts, offering personalised coaching that addresses your specific needs. The Golf Room offers TrackMan technology, a custom putting surface with training zones and video analysis of each golfer during their lessons.</p>
+      <p>Whether you're looking to refine your swing, perfect your putting, or enhance your overall course management skills, I'm here to guide you every step of the way. To get started on your golfing journey schedule an online consultation. During this session, we'll discuss your goals, assess your current skills, and develop a bespoke lesson programme tailored to your objectives. Choose personalised performance at The Golf Room — where your success is our mission. Book your 1:1 consultation with Eamonn today and take the first step towards achieving your golfing aspirations.</p>
+      <p class="eyebrow-label">Your Golf Coach</p>
+      <p>Led by PGA Professional Eamonn O'Flanagan, your bespoke lesson programme is tailored to your individual requirements helping you overcome problems and elevate your game to new heights of excellence. Utilising Trackman data and video analysis, your personalised coaching session is designed to ensure precision and passion converge seamlessly, resulting in tangible improvements for you.</p>
+    </div>
+    <div class="col-media">
+      <img src="{{ url_for('static', filename='images/programmes-photo.jpeg') }}" alt="TrackMan simulator at The Golf Room">
+    </div>
+  </div>
+</section>
+
+<div class="motto-band section-charcoal">
+  <p>Learn &nbsp;.&nbsp; Perform &nbsp;.&nbsp; Excel</p>
+</div>
+
+<section class="testimonial" style="padding-top: 0;">
+  <blockquote>&ldquo;Working with Eamon has been transformative for my golf game. He has helped me massively with the basic fundamentals of setup all the way through to the integration of course strategy and the psychological aspect of the game. His clarity of message, ability to individualize his coaching principles and embracing of new technology makes Eamon stand out as a really top golf coach. For anyone that is looking to improve their golf game, I would highly recommend Eamon.&rdquo;</blockquote>
+  <cite>Brian G</cite>
+  <div class="testimonial-dots"><span class="active"></span></div>
+</section>
+
+<section class="section-near-black">
+  <div class="wrap">
+    <div class="programmes-intro">
+      <h2>Our Coaching<br>Programmes</h2>
+      <p>It's just your normal lesson where your golf swing may look better on a screen but it isn't effective. We are all about meeting your needs at The Golf Room and helping you get to where you want to go. Eamonn is there for you every step of the way...</p>
+    </div>
+    <div class="programme-grid">
+      {% for n, title in [
+        (1, "Goal Setting"),
+        (2, "Performance Practice"),
+        (3, "Short Game Skills"),
+        (4, "Stats Analysis"),
+        (5, "Distance & Speed"),
+        (6, "Mental Skills"),
+      ] %}
+      <div>
+        <div class="num">{{ n }}</div>
+        <h3><a href="{{ url_for('coaching') }}">{{ title }}</a></h3>
+      </div>
+      {% endfor %}
+    </div>
+    <div class="programmes-cta">
+      <a class="btn-outline" href="{{ url_for('free_practice_guide') }}">Free Practice Guide</a>
+    </div>
+  </div>
+</section>
+
+<section class="voucher-row" style="padding: 0;">
+  <div class="col-media">
+    <img src="{{ url_for('static', filename='images/gift-voucher.png') }}" alt="Gift Voucher from The Golf Room">
+  </div>
+  <div class="col-text">
+    <h2>Gift<br>Vouchers</h2>
+    <p>If you are looking for that perfect gift for your loved one or a reward gift for an employee? Look no further, we have gift vouchers available for use with our coaches and experience days.</p>
+    <p>Please <a href="{{ url_for('gift_vouchers') }}" style="text-decoration: underline;">click here</a> to head over to our voucher shop.</p>
+  </div>
+</section>
+
+<section class="section-charcoal">
+  <div class="wrap">
+    <div class="form-card">
+      <h2>Contact Us</h2>
+      <form class="enquiry" method="post" action="{{ url_for('contact') }}">
+        <div>
+          <label for="first_name">First name</label>
+          <input id="first_name" name="first_name" type="text" required>
+        </div>
+        <div>
+          <label for="last_name">Last name</label>
+          <input id="last_name" name="last_name" type="text">
+        </div>
+        <div class="full">
+          <label for="email">Email</label>
+          <input id="email" name="email" type="email" required>
+        </div>
+        <div class="full">
+          <label for="message">Write a message</label>
+          <textarea id="message" name="message"></textarea>
+        </div>
+        <div class="full">
+          <button class="btn" type="submit">Submit</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}

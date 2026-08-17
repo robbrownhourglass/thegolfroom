@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}The Golf Room | Golf Coaching, Co. Laois, Ireland{% endblock %}</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.png') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <header class="site-header">
+    <div class="header-inner">
+      <button class="nav-toggle" type="button" aria-label="Toggle menu" onclick="document.querySelector('.main-nav').classList.toggle('open')">&#9776;</button>
+      <nav class="main-nav">
+        {% for endpoint, label in nav_links %}
+          <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active == endpoint else '' }}">{{ label }}</a>
+        {% endfor %}
+        <div class="nav-more" onclick="this.classList.toggle('open')">
+          <button type="button" class="{{ 'active' if active in nav_more_endpoints else '' }}">More</button>
+          <div class="nav-more-menu">
+            {% for endpoint, label in nav_more_links %}
+              <a href="{{ url_for(endpoint) }}" class="{{ 'active' if active == endpoint else '' }}">{{ label }}</a>
+            {% endfor %}
+            <a href="{{ url_for('bookings') }}">Book Online</a>
+          </div>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="wrap" style="padding-top: 30px;">
+          {% for category, message in messages %}
+            <div class="flash {{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <div class="footer-grid">
+        <div>
+          <h4>INFORMATION</h4>
+          <p>{{ contact.phone }}</p>
+          <p>{{ contact.email }}</p>
+          <a href="#">Privacy Policy</a>
+          <a href="#">Terms &amp; Conditions</a>
+          <a href="{{ url_for('contact') }}">Contact Us</a>
+        </div>
+        <div>
+          <h4>THE GOLF ROOM</h4>
+          <a href="{{ url_for('home') }}">Home</a>
+          <a href="{{ url_for('meet_eamonn') }}">Meet Eamonn</a>
+          <a href="{{ url_for('coaching') }}">Coaching Services</a>
+          <a href="{{ url_for('bookings') }}">Bookings</a>
+          <a href="{{ url_for('free_practice_guide') }}">Free Practice Guide</a>
+          <a href="{{ url_for('gift_vouchers') }}">Gift Vouchers</a>
+        </div>
+        <div>
+          <h4>STAY IN TOUCH</h4>
+          <p>Join our email list and get early access to monthly golf programmes and practice tips.</p>
+          <form class="newsletter-form" action="{{ url_for('free_practice_guide') }}" method="post">
+            <input type="email" name="email" placeholder="Email address" required>
+            <button class="btn" type="submit">Subscribe</button>
+          </form>
+        </div>
+        <div>
+          <h4>LOCATION</h4>
+          {% for line in contact.address %}<p>{{ line }}</p>{% endfor %}
+          <div class="social-icons">
+            <a href="https://instagram.com" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='images/instagram-icon.png') }}" alt="Instagram"></a>
+            <a href="https://twitter.com" target="_blank" rel="noopener"><img src="{{ url_for('static', filename='images/twitter-icon.png') }}" alt="Twitter"></a>
+          </div>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>&copy; 2026 The Golf Room Ltd</span>
+        <span>{{ contact.cro }}</span>
+      </div>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Golf Coaching | The Golf Room{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="wrap page-hero-inner">
+    <div>
+      <h1>Coaching Programmes</h1>
+      <hr class="rule rule-bar">
+      <p>Led by PGA Professional Eamonn O'Flanagan, your bespoke lesson programme is tailored to your individual requirements helping you overcome problems and elevate your game to new heights of excellence. Utilising Trackman data and personalised coaching to ensure precision and passion converge seamlessly, resulting in tangible improvements for you.</p>
+    </div>
+  </div>
+</div>
+
+{% for prog in programmes %}
+<div class="coach-row{{ ' reverse' if loop.index is even else '' }}">
+  <div class="col-media">
+    <img src="{{ url_for('static', filename='images/' ~ prog.img) }}" alt="{{ prog.title }}">
+  </div>
+  <div class="col-text">
+    <div class="num">{{ loop.index }}</div>
+    <h2>{{ prog.title }}</h2>
+    {% for para in prog.body %}<p>{{ para }}</p>{% endfor %}
+    <a class="btn-outline" href="{{ url_for('bookings') }}">Book Your Session</a>
+  </div>
+</div>
+{% endfor %}
+{% endblock %}

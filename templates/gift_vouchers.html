@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Gift Vouchers | The Golf Room{% endblock %}
+
+{% block content %}
+<div class="page-hero">
+  <div class="wrap">
+    <h1>Vouchers</h1>
+    <hr class="rule rule-bar">
+  </div>
+</div>
+
+<section class="voucher-row" style="padding: 0;">
+  <div class="col-media">
+    <img src="{{ url_for('static', filename='images/gift-voucher.png') }}" alt="Gift Voucher from The Golf Room">
+  </div>
+  <div class="col-text">
+    <h2>Give the<br>Gift of Golf</h2>
+    <p>Looking for that perfect gift for a loved one, or a reward gift for an employee? Look no further — we have gift vouchers available for use with our coaches and experience days.</p>
+    <p>Vouchers can be arranged directly with Eamonn — get in touch and we'll set one up for you.</p>
+    <a class="btn-outline" href="mailto:{{ contact.email }}">Enquire About a Voucher</a>
+  </div>
+</section>
+{% endblock %}

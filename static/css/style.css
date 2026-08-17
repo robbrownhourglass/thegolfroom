@@ -1,0 +1,574 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@600;700;800&family=Work+Sans:ital,wght@0,200;0,300;0,400;1,300&family=Caudex:ital@0;1&display=swap');
+
+/*
+  Font substitution note: the live site (thegolfroom.ie, built on Wix) uses two
+  commercially-licensed webfonts — "Lulo Clean W01 One Bold" for headings/nav/
+  buttons and "DIN Next W01 Light" for body copy — served from Wix's own font
+  CDN under Wix's license. Those aren't legally embeddable here, so this rebuild
+  substitutes closely-matched free Google Fonts: Poppins (bold geometric, for
+  headings) and Work Sans (light, for body copy). The testimonial quote font,
+  Caudex, IS a free Google Font and is used as an exact match.
+*/
+
+:root {
+  --black: #000000;
+  --charcoal: #2d2e2d;
+  --near-black: #1e1e1e;
+  --deep-green: #062a08;
+  --sage-green: #3a4f3a;
+  --gray: #646464;
+  --gold: #e8c061;
+  --lime: #bada55;
+  --white: #ffffff;
+  --off-white: rgba(255, 255, 255, 0.82);
+  --muted-on-dark: rgba(255, 255, 255, 0.62);
+  --radius: 4px;
+  --max-width: 1180px;
+  font-size: 16px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+
+body {
+  font-family: "Work Sans", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 300;
+  color: var(--off-white);
+  background: var(--black);
+  line-height: 1.7;
+}
+
+img { max-width: 100%; display: block; }
+a { color: inherit; text-decoration: none; }
+
+.wrap {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 28px;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Poppins", "Helvetica Neue", Arial, sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+  margin: 0 0 0.5em;
+  color: var(--white);
+  line-height: 1.15;
+}
+
+h1 { font-size: clamp(2.6rem, 6vw, 5.3rem); }
+h2 { font-size: clamp(1.9rem, 4vw, 2.6rem); }
+h3 { font-size: 1.05rem; letter-spacing: 0.04em; }
+
+p { margin: 0 0 1em; color: var(--off-white); font-weight: 300; }
+
+.rule {
+  width: 220px;
+  height: 1px;
+  background: var(--gold);
+  border: none;
+  margin: 0 0 2em;
+}
+.rule.rule-bar {
+  height: 3px;
+  width: 480px;
+  max-width: 60vw;
+  background: linear-gradient(to right, var(--gray) 0 55%, var(--gold) 55% 100%);
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0.95em 1.8em;
+  background: var(--white);
+  color: var(--black);
+  border: 1px solid var(--white);
+  border-radius: var(--radius);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+.btn:hover { opacity: 0.85; }
+
+.btn-split {
+  display: inline-flex;
+  align-items: stretch;
+}
+.btn-split .btn { border-radius: var(--radius) 0 0 var(--radius); border-right: none; }
+.btn-split .btn-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 54px;
+  background: var(--gold);
+  border-radius: 0 var(--radius) var(--radius) 0;
+  color: var(--black);
+  font-weight: 700;
+}
+
+.btn-outline {
+  display: inline-block;
+  padding: 0.85em 2em;
+  background: transparent;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  border-radius: var(--radius);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.78rem;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+.btn-outline:hover { background: var(--gold); color: var(--black); }
+
+/* ---------- Header ---------- */
+header.site-header {
+  background: var(--black);
+  border-bottom: 1px solid #1a1a1a;
+  position: relative; /* the live site's header is NOT sticky — it scrolls away with the page */
+  z-index: 10;
+}
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 22px 28px;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  gap: 20px;
+}
+.brand { display: none; } /* the live site has no separate wordmark in the header — the nav stands alone */
+
+nav.main-nav {
+  display: flex;
+  align-items: center;
+  gap: 34px;
+  flex-wrap: wrap;
+}
+nav.main-nav a {
+  color: var(--white);
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+nav.main-nav a:hover,
+nav.main-nav a.active { color: var(--gold); }
+
+.nav-more { position: relative; }
+.nav-more > button {
+  background: none;
+  border: none;
+  color: var(--white);
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  padding: 0;
+}
+.nav-more:hover > button,
+.nav-more.open > button { color: var(--gold); }
+.nav-more-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 22px;
+  background: var(--black);
+  border: 1px solid #222;
+  min-width: 180px;
+  padding: 10px 0;
+  display: none;
+  flex-direction: column;
+  z-index: 20;
+}
+.nav-more:hover .nav-more-menu,
+.nav-more.open .nav-more-menu { display: flex; }
+.nav-more-menu a {
+  padding: 10px 20px;
+  font-size: 0.72rem;
+}
+.nav-more-menu a:hover { background: #111; }
+
+.nav-toggle {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--white);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+@media (max-width: 860px) {
+  nav.main-nav {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--black);
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 10px 28px 26px;
+    gap: 18px;
+    border-bottom: 1px solid #1a1a1a;
+  }
+  nav.main-nav.open { display: flex; }
+  .nav-more-menu { position: static; margin-top: 12px; border: none; padding: 0 0 0 14px; }
+  .nav-more.open .nav-more-menu { display: flex; }
+  .nav-toggle { display: block; }
+}
+
+/* ---------- Hero ---------- */
+.hero {
+  position: relative;
+  min-height: 92vh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  color: var(--white);
+  background: var(--black) url('../images/golfball-black.jpg') center 30% / cover no-repeat;
+  background-attachment: fixed;
+  isolation: isolate;
+  overflow: hidden;
+}
+@media (max-width: 860px) {
+  .hero { background-attachment: scroll; }
+}
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0.45) 0%, rgba(0,0,0,0.55) 40%, rgba(0,0,0,0.85) 100%);
+  z-index: -1;
+}
+.hero-inner {
+  max-width: var(--max-width);
+  width: 100%;
+  margin: 0 auto;
+  padding: 40px 28px 60px;
+}
+.hero-badge {
+  width: 170px;
+  margin-left: auto;
+  margin-bottom: 20px;
+}
+.hero-title { font-size: clamp(2.8rem, 8vw, 6rem); margin-bottom: 0.15em; }
+.hero-tagline {
+  font-family: "Work Sans", sans-serif;
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(1.3rem, 3vw, 2.1rem);
+  color: var(--gold);
+  margin-bottom: 1.6em;
+}
+.hero-cta { margin-bottom: 2em; }
+/* These icon assets are pre-composited white discs with the glyph cut out as
+   transparency (not a black glyph on a white fill) — they only read correctly
+   sitting directly on a dark background, so no extra circle wrapper here. */
+.hero-social { display: flex; gap: 14px; }
+.hero-social img { width: 38px; height: 38px; }
+
+/* ---------- Sections ---------- */
+section { padding: 90px 0; }
+.section-green { background: var(--deep-green); }
+.section-charcoal { background: var(--charcoal); }
+.section-near-black {
+  background: var(--near-black);
+  background: radial-gradient(ellipse at top, #2a2a2a 0%, var(--near-black) 60%);
+}
+
+.two-col {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+}
+.two-col .col-text { padding: 70px 60px; align-self: center; }
+.two-col .col-media img { height: 100%; width: 100%; object-fit: cover; min-height: 420px; }
+@media (max-width: 860px) {
+  .two-col { grid-template-columns: 1fr; }
+  .two-col .col-text { padding: 50px 28px; }
+}
+
+.eyebrow-label {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--off-white);
+  margin: 1.6em 0 0.8em;
+}
+
+/* Learn / Perform / Excel band */
+.motto-band { text-align: center; padding: 70px 0; }
+.motto-band p {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-size: clamp(1.2rem, 3vw, 2rem);
+  margin: 0;
+}
+
+/* Testimonial */
+.testimonial {
+  position: relative;
+  text-align: center;
+  padding: 90px 0;
+  background: var(--charcoal) url('../images/golfballs-grass.jpg') center / cover no-repeat;
+  isolation: isolate;
+}
+.testimonial::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.78);
+  z-index: -1;
+}
+.testimonial blockquote {
+  max-width: 780px;
+  margin: 0 auto 1.4em;
+  font-family: "Caudex", serif;
+  font-style: italic;
+  font-size: clamp(1.1rem, 2.4vw, 1.5rem);
+  color: var(--white);
+  line-height: 1.6;
+}
+.testimonial cite {
+  display: block;
+  font-family: "Caudex", serif;
+  font-style: normal;
+  font-size: 1.1rem;
+  color: var(--off-white);
+  margin-bottom: 1.6em;
+}
+.testimonial-dots { display: flex; justify-content: center; gap: 8px; }
+.testimonial-dots span {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: rgba(255,255,255,0.35);
+}
+.testimonial-dots span.active { background: var(--white); }
+
+/* Programme numbered grid (home) */
+.programmes-intro { text-align: center; max-width: 760px; margin: 0 auto 3em; }
+.programme-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 50px 30px;
+  text-align: center;
+  margin-bottom: 3.5em;
+}
+@media (max-width: 760px) { .programme-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .programme-grid { grid-template-columns: 1fr; } }
+.programme-grid .num {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 3.2rem;
+  color: var(--gold);
+  line-height: 1;
+  margin-bottom: 0.1em;
+}
+.programme-grid h3 {
+  color: var(--white);
+  text-decoration: underline;
+  text-underline-offset: 6px;
+  text-decoration-color: rgba(255,255,255,0.5);
+}
+.programmes-cta { text-align: center; }
+
+/* Coaching sub-page: alternating rows */
+.coach-row { display: grid; grid-template-columns: 1fr 1fr; min-height: 480px; }
+.coach-row .col-media img { height: 100%; width: 100%; object-fit: cover; }
+.coach-row .col-text {
+  background: var(--sage-green);
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.coach-row.reverse { direction: rtl; }
+.coach-row.reverse .col-text { direction: ltr; }
+.coach-row .num {
+  font-family: "Poppins", sans-serif;
+  font-weight: 800;
+  font-size: 3.6rem;
+  color: var(--lime);
+  line-height: 1;
+  margin-bottom: 0.1em;
+}
+.coach-row h2 { font-size: 1.8rem; margin-bottom: 0.6em; }
+.coach-row p { font-style: italic; color: var(--off-white); }
+.coach-row .btn-outline { margin-top: 1em; align-self: flex-start; }
+@media (max-width: 860px) {
+  .coach-row, .coach-row.reverse { grid-template-columns: 1fr; direction: ltr; }
+  .coach-row .col-text { padding: 50px 28px; }
+  .coach-row .col-media img { min-height: 320px; }
+}
+
+/* Page hero band (sub-pages) */
+.page-hero {
+  background: var(--charcoal);
+  padding: 90px 0 60px;
+}
+.page-hero-inner {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+.page-hero h1 { margin-bottom: 0; font-size: clamp(2.2rem, 5vw, 3.2rem); }
+.page-hero p { max-width: 640px; margin-top: 1.2em; color: var(--off-white); }
+
+/* Bio section (meet eamonn) */
+.bio-row { display: grid; grid-template-columns: 1fr 1fr; }
+.bio-row .col-text { background: var(--gray); padding: 70px 60px; }
+.bio-row .col-media img { height: 100%; width: 100%; object-fit: cover; min-height: 460px; }
+.bio-row h1 { font-size: clamp(2rem, 4vw, 2.8rem); margin-bottom: 0.1em; }
+.bio-row .role {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  color: var(--gold);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.85rem;
+  margin-bottom: 1.4em;
+}
+@media (max-width: 860px) {
+  .bio-row { grid-template-columns: 1fr; }
+  .bio-row .col-text { padding: 50px 28px; }
+}
+
+/* Voucher / gift CTA */
+.voucher-row { display: grid; grid-template-columns: 1fr 1fr; min-height: 420px; }
+.voucher-row .col-media img { height: 100%; width: 100%; object-fit: cover; }
+.voucher-row .col-text {
+  background: var(--deep-green);
+  padding: 70px 60px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@media (max-width: 860px) {
+  .voucher-row { grid-template-columns: 1fr; }
+  .voucher-row .col-media img { min-height: 320px; }
+  .voucher-row .col-text { padding: 50px 28px; }
+}
+
+/* Forms (styled to resemble the Wix Forms card on the live site) */
+.form-card {
+  background: var(--gray);
+  border-radius: 10px;
+  padding: 46px;
+  max-width: 720px;
+  margin: 0 auto;
+}
+.form-card h2 {
+  font-family: "Work Sans", sans-serif;
+  text-transform: none;
+  font-weight: 400;
+  color: var(--black);
+  font-size: 1.7rem;
+  letter-spacing: normal;
+}
+form.enquiry {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+form.enquiry .full { grid-column: 1 / -1; }
+form.enquiry label {
+  display: block;
+  font-size: 0.8rem;
+  color: #1c1c1c;
+  margin-bottom: 6px;
+  font-weight: 400;
+}
+form.enquiry input,
+form.enquiry textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 3px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  background: #c7c7c7;
+  color: #1c1c1c;
+}
+form.enquiry input::placeholder,
+form.enquiry textarea::placeholder { color: #5a5a5a; }
+form.enquiry textarea { min-height: 110px; resize: vertical; }
+form.enquiry .btn { justify-self: start; background: var(--black); color: var(--white); border-color: var(--black); }
+@media (max-width: 600px) {
+  form.enquiry { grid-template-columns: 1fr; }
+  .form-card { padding: 30px 22px; }
+}
+
+.flash {
+  max-width: 720px;
+  margin: 0 auto 24px;
+  padding: 14px 18px;
+  border-radius: var(--radius);
+  font-size: 0.9rem;
+  font-family: "Work Sans", sans-serif;
+}
+.flash.success { background: #1f3a24; color: #bfe9c6; border: 1px solid #2e5636; }
+.flash.error { background: #3a1f1f; color: #f0c6c0; border: 1px solid #5a2f2a; }
+
+.info-strip { text-align: center; margin-bottom: 3em; }
+.info-strip a { text-decoration: underline; }
+
+/* ---------- Footer ---------- */
+footer.site-footer { background: var(--black); padding: 70px 0 30px; }
+.footer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  margin-bottom: 50px;
+}
+@media (max-width: 800px) { .footer-grid { grid-template-columns: repeat(2, 1fr); } }
+.footer-grid h4 {
+  color: var(--white);
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  margin-bottom: 1.1em;
+}
+.footer-grid a, .footer-grid p { display: block; color: var(--muted-on-dark); font-size: 0.88rem; margin-bottom: 0.6em; }
+.footer-grid a:hover { color: var(--gold); }
+
+.newsletter-form { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+.newsletter-form input {
+  flex: 1; min-width: 160px;
+  padding: 11px 12px;
+  border-radius: var(--radius);
+  border: 1px solid #333;
+  background: #111;
+  color: var(--white);
+  font-family: inherit;
+}
+.newsletter-form .btn { padding: 0.7em 1.4em; }
+
+.social-icons { display: flex; gap: 12px; margin-top: 12px; }
+.social-icons img { width: 28px; height: 28px; }
+
+.footer-bottom {
+  border-top: 1px solid #1c1c1c;
+  padding-top: 24px;
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: #6f6f6f;
+}
