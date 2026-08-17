@@ -9,6 +9,8 @@ Then open http://127.0.0.1:5000
 """
 from flask import Flask, render_template, request, redirect, url_for, flash
 
+import calendar_service
+
 app = Flask(__name__)
 app.secret_key = "dev-only-change-me"  # only needed for flash messages; replace before any real deploy
 
@@ -145,10 +147,39 @@ def free_practice_guide():
 
 @app.route("/bookings", methods=["GET", "POST"])
 def bookings():
+    if not calendar_service.is_configured():
+        # Google Calendar isn't wired up yet (see calendar_service.py for
+        # setup steps) — fall back to a plain request form instead of
+        # breaking the page.
+        if request.method == "POST":
+            handle_contact_form("Thanks for submitting! We'll be in touch shortly.")
+            return redirect(url_for("bookings"))
+        return render_template("bookings_fallback.html")
+
     if request.method == "POST":
-        handle_contact_form("Thanks for submitting! We'll be in touch shortly.")
+        slot_iso = request.form.get("slot", "").strip()
+        name = request.form.get("name", "").strip()
+        email = request.form.get("email", "").strip()
+        phone = request.form.get("phone", "").strip()
+        notes = request.form.get("notes", "").strip()
+
+        if not slot_iso or not name or not email:
+            flash("Please choose a time and fill in your name and email.", "error")
+            return redirect(url_for("bookings"))
+
+        success, error = calendar_service.create_booking_request(slot_iso, name, email, phone, notes)
+        if success:
+            flash(
+                "Thanks! Your requested slot has been sent to Eamonn for confirmation — "
+                "you'll hear back shortly.",
+                "success",
+            )
+        else:
+            flash(error or "Something went wrong — please try again.", "error")
         return redirect(url_for("bookings"))
-    return render_template("bookings.html")
+
+    days = calendar_service.get_available_slots()
+    return render_template("bookings.html", days=days)
 
 
 @app.route("/gift-vouchers")

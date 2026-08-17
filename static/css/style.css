@@ -482,21 +482,21 @@ section { padding: 90px 0; }
   font-size: 1.7rem;
   letter-spacing: normal;
 }
-form.enquiry {
+.enquiry {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 18px;
 }
-form.enquiry .full { grid-column: 1 / -1; }
-form.enquiry label {
+.enquiry .full { grid-column: 1 / -1; }
+.enquiry label {
   display: block;
   font-size: 0.8rem;
   color: #1c1c1c;
   margin-bottom: 6px;
   font-weight: 400;
 }
-form.enquiry input,
-form.enquiry textarea {
+.enquiry input,
+.enquiry textarea {
   width: 100%;
   padding: 12px 14px;
   border: none;
@@ -506,12 +506,12 @@ form.enquiry textarea {
   background: #c7c7c7;
   color: #1c1c1c;
 }
-form.enquiry input::placeholder,
-form.enquiry textarea::placeholder { color: #5a5a5a; }
-form.enquiry textarea { min-height: 110px; resize: vertical; }
-form.enquiry .btn { justify-self: start; background: var(--black); color: var(--white); border-color: var(--black); }
+.enquiry input::placeholder,
+.enquiry textarea::placeholder { color: #5a5a5a; }
+.enquiry textarea { min-height: 110px; resize: vertical; }
+.enquiry .btn { justify-self: start; background: var(--black); color: var(--white); border-color: var(--black); }
 @media (max-width: 600px) {
-  form.enquiry { grid-template-columns: 1fr; }
+  .enquiry { grid-template-columns: 1fr; }
   .form-card { padding: 30px 22px; }
 }
 
@@ -528,6 +528,48 @@ form.enquiry .btn { justify-self: start; background: var(--black); color: var(--
 
 .info-strip { text-align: center; margin-bottom: 3em; }
 .info-strip a { text-decoration: underline; }
+
+/* Booking slot picker */
+.slot-picker { max-width: 780px; margin: 0 auto; }
+.slot-day { margin-bottom: 2em; }
+.slot-day h3 {
+  color: var(--white);
+  text-transform: none;
+  font-family: "Work Sans", sans-serif;
+  font-weight: 400;
+  letter-spacing: normal;
+  font-size: 1.05rem;
+  margin-bottom: 0.8em;
+  padding-bottom: 0.5em;
+  border-bottom: 1px solid #3a3a3a;
+}
+.slot-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.slot-picker input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px; height: 1px;
+}
+.slot-btn {
+  display: inline-block;
+  padding: 0.6em 1.1em;
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  color: var(--gold);
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+.slot-btn:hover { background: rgba(232, 192, 97, 0.12); }
+.slot-picker input[type="radio"]:checked + .slot-btn {
+  background: var(--gold);
+  color: var(--black);
+}
+.slot-picker input[type="radio"]:focus-visible + .slot-btn {
+  outline: 2px solid var(--white);
+  outline-offset: 2px;
+}
 
 /* ---------- Footer ---------- */
 footer.site-footer { background: var(--black); padding: 70px 0 30px; }

@@ -23,17 +23,40 @@ pip install -r requirements.txt
 python app.py
 ```
 
-Then open http://127.0.0.1:5000
+Then open http://127.0.0.1:5050 (not 5000 — macOS AirPlay Receiver commonly
+squats on 5000).
+
+## Bookings — connecting Eamonn's Google Calendar
+
+`/bookings` shows real open slots (Mon–Fri, 9am–5pm, 60-minute sessions,
+Europe/Dublin time) read live from Eamonn's Google Calendar, and submitting
+a request writes a **tentative** hold onto that calendar for him to confirm
+or decline — it never auto-books. Until it's connected, `/bookings` quietly
+falls back to a plain contact form instead of breaking.
+
+To connect it, see the full step-by-step setup guide in the docstring at
+the top of `calendar_service.py` (create a Google Cloud service account,
+share Eamonn's calendar with it, then set two environment variables:
+`GOOGLE_SERVICE_ACCOUNT_FILE` and `GOOGLE_CALENDAR_ID`). That setup needs
+Eamonn's own Google account access, so it can't be done from here.
+
+Business rules (hours, session length, how many days ahead to show, minimum
+notice) are constants at the top of `calendar_service.py` — edit them there
+if Eamonn's actual availability differs.
 
 ## Notes
 
-- The contact/booking/newsletter forms validate input and show a confirmation
-  message, but **do not send real email yet** — `handle_contact_form()` in
-  `app.py` is the place to wire up SMTP, a CRM, or a form service (e.g.
-  Mailgun, SendGrid, Formspree) before using this in production.
+- The contact/free-practice-guide/newsletter forms validate input and show a
+  confirmation message, but **do not send real email yet** —
+  `handle_contact_form()` in `app.py` is the place to wire up SMTP, a CRM, or
+  a form service (e.g. Mailgun, SendGrid, Formspree) before using this in
+  production. (Bookings are the exception — those really do write to Google
+  Calendar once configured, see above.)
 - The gift vouchers page links out via `mailto:` rather than an online store —
   the original site's voucher shop uses a Wix Stores widget that wasn't
   replicated here.
 - Images and copy were pulled directly from the live site's public pages.
 - `app.secret_key` in `app.py` is a placeholder — replace it with a real
   secret (e.g. from an environment variable) before deploying.
+- `service_account.json` (once you add it) and any `*.serviceaccount.json`
+  file are gitignored — never commit real Google credentials.

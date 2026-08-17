@@ -4,3 +4,7 @@ __pycache__/
 venv/
 .env
 .DS_Store
+
+# Google Calendar service-account credentials — never commit these.
+service_account.json
+*.serviceaccount.json

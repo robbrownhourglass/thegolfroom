@@ -6,37 +6,61 @@
   <div class="wrap">
     <h1>Bookings</h1>
     <hr class="rule rule-bar">
-    <p><a href="tel:0863843258">{{ contact.phone }}</a><br><a href="mailto:{{ contact.email }}">{{ contact.email }}</a></p>
-    <p>Our live booking system is currently being updated and will resume shortly. If you would like to book your session please contact Eamonn at The Golf Room by completing the form below and we will be in touch shortly.</p>
+    <p>Pick an open slot below and send your details — Eamonn reviews every request personally and will confirm your session by email.</p>
   </div>
 </div>
 
 <section class="section-charcoal" style="padding-top: 60px;">
   <div class="wrap">
-    <div class="form-card">
-      <h2>Contact Us</h2>
-      <form class="enquiry" method="post">
-        <div>
-          <label for="first_name">First name</label>
-          <input id="first_name" name="first_name" type="text" required>
+    <form method="post" id="booking-form">
+      <div class="slot-picker">
+        {% set has_any_slots = days|selectattr('slots')|list|length > 0 %}
+        {% if not has_any_slots %}
+          <p style="text-align:center;">There's nothing open in the next couple of weeks right now — please <a href="{{ url_for('contact') }}" style="text-decoration:underline;">get in touch directly</a> and Eamonn will find you a time.</p>
+        {% else %}
+          {% for day in days %}
+            {% if day.slots %}
+            <div class="slot-day">
+              <h3>{{ day.label }}</h3>
+              <div class="slot-row">
+                {% for slot in day.slots %}
+                <input type="radio" name="slot" value="{{ slot.iso }}" id="slot-{{ slot.iso }}" required>
+                <label class="slot-btn" for="slot-{{ slot.iso }}">{{ slot.label }}</label>
+                {% endfor %}
+              </div>
+            </div>
+            {% endif %}
+          {% endfor %}
+        {% endif %}
+      </div>
+
+      {% if has_any_slots %}
+      <div class="form-card" style="margin-top: 3em;">
+        <h2>Your Details</h2>
+        <div class="enquiry">
+          <div>
+            <label for="name">Name</label>
+            <input id="name" name="name" type="text" required>
+          </div>
+          <div>
+            <label for="email">Email</label>
+            <input id="email" name="email" type="email" required>
+          </div>
+          <div>
+            <label for="phone">Phone</label>
+            <input id="phone" name="phone" type="tel">
+          </div>
+          <div class="full">
+            <label for="notes">Anything Eamonn should know?</label>
+            <textarea id="notes" name="notes" rows="4"></textarea>
+          </div>
+          <div class="full">
+            <button class="btn" type="submit">Request This Slot</button>
+          </div>
         </div>
-        <div>
-          <label for="last_name">Last name</label>
-          <input id="last_name" name="last_name" type="text">
-        </div>
-        <div class="full">
-          <label for="email">Email</label>
-          <input id="email" name="email" type="email" required>
-        </div>
-        <div class="full">
-          <label for="message">Write a message</label>
-          <textarea id="message" name="message"></textarea>
-        </div>
-        <div class="full">
-          <button class="btn" type="submit">Submit</button>
-        </div>
-      </form>
-    </div>
+      </div>
+      {% endif %}
+    </form>
   </div>
 </section>
 {% endblock %}
