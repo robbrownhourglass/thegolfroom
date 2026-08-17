@@ -7,12 +7,17 @@ Run locally:
     python app.py
 Then open http://127.0.0.1:5000
 """
-from flask import Flask, render_template, request, redirect, url_for, flash
+import os
+
+from flask import Flask, render_template, request, redirect, url_for, flash, session, abort
 
 import calendar_service
 
 app = Flask(__name__)
-app.secret_key = "dev-only-change-me"  # only needed for flash messages; replace before any real deploy
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-only-change-me")
+# Used for flash messages AND to protect the OAuth "state" during Google
+# sign-in (see /connect-calendar) — set FLASK_SECRET_KEY to a real random
+# value before any real deploy, not just before going live with bookings.
 
 # Nav links shared across every page (base.html renders these).
 # Matches the live site's structure: 4 links on the bar, the rest tucked
@@ -180,6 +185,54 @@ def bookings():
 
     days = calendar_service.get_available_slots()
     return render_template("bookings.html", days=days)
+
+
+@app.route("/connect-calendar")
+def connect_calendar():
+    """
+    One-time admin route: kicks off the "Sign in with Google" flow that
+    authorizes this app against Eamonn's Google Calendar. Gated by
+    ADMIN_SETUP_TOKEN so a random visitor can't hijack the connection.
+    Full setup steps are in calendar_service.py's module docstring.
+    """
+    expected = calendar_service.ADMIN_SETUP_TOKEN
+    if not expected or request.args.get("token") != expected:
+        abort(403)
+
+    redirect_uri = url_for("oauth2callback", _external=True)
+    flow = calendar_service.build_auth_flow(redirect_uri)
+    authorization_url, state = flow.authorization_url(
+        access_type="offline",
+        include_granted_scopes="true",
+        prompt="consent",  # forces Google to re-issue a refresh_token even on repeat auth
+    )
+    session["oauth_state"] = state
+    return redirect(authorization_url)
+
+
+@app.route("/oauth2callback")
+def oauth2callback():
+    """Google redirects here after the user allows (or denies) calendar access."""
+    if request.args.get("error"):
+        flash(f"Google sign-in didn't complete ({request.args['error']}). Try /connect-calendar again.", "error")
+        return redirect(url_for("home"))
+
+    state = session.get("oauth_state")
+    if not state:
+        abort(400)
+
+    redirect_uri = url_for("oauth2callback", _external=True)
+    flow = calendar_service.build_auth_flow(redirect_uri, state=state)
+    try:
+        flow.fetch_token(authorization_response=request.url)
+    except Exception:
+        app.logger.exception("Google OAuth token exchange failed")
+        flash("Something went wrong finishing Google sign-in. Please try /connect-calendar again.", "error")
+        return redirect(url_for("home"))
+
+    calendar_service.save_credentials(flow.credentials)
+    flash("Google Calendar connected! The Bookings page now shows live availability.", "success")
+    return redirect(url_for("bookings"))
 
 
 @app.route("/gift-vouchers")

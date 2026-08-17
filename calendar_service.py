@@ -4,8 +4,9 @@ Google Calendar integration for The Golf Room's booking page.
 How this works
 ---------------
 Eamonn's calendar is treated as the single source of truth for availability.
-A Google service account (a "robot" Google identity, not a personal login)
-is granted access to his calendar, and this module:
+This uses OAuth "Sign in with Google" — Eamonn authorizes the app once with
+his own Google account (rather than sharing his calendar with a robot
+service-account identity), and this module:
 
   1. Reads busy/free time on his calendar (`get_available_slots`) to work out
      which 60-minute coaching slots are open, Mon-Fri 9am-5pm Europe/Dublin.
@@ -15,40 +16,54 @@ is granted access to his calendar, and this module:
      Google's own notification email to him as an invited attendee) and
      confirms or declines them directly in Google Calendar.
 
-One-time setup required (cannot be done by this code — needs your Google
-account access):
+One-time setup required (cannot be done by this code — needs Eamonn's own
+Google account access):
 
   1. Go to https://console.cloud.google.com/ and create a project (or reuse
      one).
   2. Enable the "Google Calendar API" for that project (APIs & Services ->
      Enable APIs and Services -> search "Google Calendar API" -> Enable).
-  3. Create a service account (APIs & Services -> Credentials -> Create
-     Credentials -> Service account). Give it any name, e.g. "golf-room-
-     bookings".
-  4. Open the service account -> Keys -> Add Key -> Create new key -> JSON.
-     This downloads a .json file — save it as `service_account.json` in
-     this project's root folder (it's already in .gitignore, so it will
-     never get committed/pushed).
-  5. Open the downloaded JSON file and copy the "client_email" value
-     (looks like `golf-room-bookings@your-project.iam.gserviceaccount.com`).
-  6. In Google Calendar (as Eamonn), go to the calendar you want bookings
-     read from/written to -> Settings and sharing -> "Share with specific
-     people" -> add that service account email -> permission
-     "Make changes to events".
-  7. Set two environment variables before running the app:
-       GOOGLE_SERVICE_ACCOUNT_FILE=service_account.json   (or an absolute path)
-       GOOGLE_CALENDAR_ID=eamonns-address@gmail.com       (the calendar's ID —
-         usually just the Google account email the calendar belongs to)
+  3. Configure the OAuth consent screen (APIs & Services -> OAuth consent
+     screen): User type "External" is fine, keep it in "Testing" mode (no
+     Google review needed for that), add scope
+     `https://www.googleapis.com/auth/calendar`, and add Eamonn's Google
+     account email under "Test users".
+  4. Create credentials (APIs & Services -> Credentials -> Create Credentials
+     -> OAuth client ID). Application type: "Web application". Under
+     "Authorized redirect URIs" add:
+       http://127.0.0.1:5050/oauth2callback        (for local testing)
+       https://<your-real-domain>/oauth2callback    (once deployed)
+  5. Download the client's JSON and save it as `client_secret.json` in this
+     project's root folder (it's already in .gitignore, so it never gets
+     committed/pushed).
+  6. Pick a long random secret string and set it as an environment variable
+     — this gates the one-time "connect calendar" link so a stranger can't
+     hijack the connection:
+       ADMIN_SETUP_TOKEN=<some long random string>
+  7. Start the app, then visit (as Eamonn, logged into his own Google
+     account in the browser):
+       http://127.0.0.1:5050/connect-calendar?token=<the ADMIN_SETUP_TOKEN above>
+     Click through Google's sign-in and the "Google hasn't verified this
+     app" warning (expected — Continue -> Continue; this is normal while
+     the consent screen is in Testing mode) and Allow calendar access.
+     You'll land back on a "Calendar connected" confirmation, and a
+     `token.json` file is created (also gitignored) holding the refresh
+     token this module uses from then on.
+  8. Optional: set GOOGLE_CALENDAR_ID if bookings should read/write a
+     specific calendar rather than the Google account's main one — it
+     defaults to "primary" (Eamonn's own main calendar).
 
-Until those are set, `is_configured()` returns False and the booking page
-falls back to a plain contact form instead of showing a slot picker.
+Until step 7 is complete, `is_configured()` returns False and the booking
+page falls back to a plain contact form instead of showing a slot picker.
 """
 import os
 import time
 from datetime import datetime, timedelta
 
 from zoneinfo import ZoneInfo
-from google.oauth2 import service_account
+from google.auth.transport.requests import Request as GoogleAuthRequest
+from google.oauth2.credentials import Credentials
+from google_auth_oauthlib.flow import Flow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
@@ -61,8 +76,10 @@ SESSION_MINUTES = 60
 DAYS_AHEAD = 14  # how far out the slot picker looks
 MIN_NOTICE_HOURS = 24  # can't book a slot less than this far in advance
 
-SERVICE_ACCOUNT_FILE = os.environ.get("GOOGLE_SERVICE_ACCOUNT_FILE", "service_account.json")
-CALENDAR_ID = os.environ.get("GOOGLE_CALENDAR_ID")
+CLIENT_SECRETS_FILE = os.environ.get("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
+TOKEN_FILE = os.environ.get("GOOGLE_TOKEN_FILE", "token.json")
+CALENDAR_ID = os.environ.get("GOOGLE_CALENDAR_ID", "primary")
+ADMIN_SETUP_TOKEN = os.environ.get("ADMIN_SETUP_TOKEN")
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 _service = None  # lazily-built, cached Calendar API client
@@ -71,16 +88,48 @@ CACHE_SECONDS = 120  # avoid hammering the API on every page view
 
 
 def is_configured():
-    """True once the service account file + calendar ID are both in place."""
-    return bool(CALENDAR_ID) and os.path.isfile(SERVICE_ACCOUNT_FILE)
+    """True once Eamonn has completed the one-time /connect-calendar authorization."""
+    if not os.path.isfile(TOKEN_FILE):
+        return False
+    try:
+        return Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES) is not None
+    except (ValueError, OSError):
+        return False
+
+
+def _load_credentials():
+    creds = Credentials.from_authorized_user_file(TOKEN_FILE, SCOPES)
+    if creds and creds.expired and creds.refresh_token:
+        creds.refresh(GoogleAuthRequest())
+        with open(TOKEN_FILE, "w") as f:
+            f.write(creds.to_json())
+    return creds
+
+
+def save_credentials(creds):
+    """Persist freshly-authorized credentials and drop the cached API client."""
+    global _service
+    with open(TOKEN_FILE, "w") as f:
+        f.write(creds.to_json())
+    _service = None
+
+
+def build_auth_flow(redirect_uri, state=None):
+    """Used by the /connect-calendar and /oauth2callback routes in app.py."""
+    return Flow.from_client_secrets_file(
+        CLIENT_SECRETS_FILE, scopes=SCOPES, redirect_uri=redirect_uri, state=state
+    )
 
 
 def _get_service():
     global _service
     if _service is None:
-        credentials = service_account.Credentials.from_service_account_file(
-            SERVICE_ACCOUNT_FILE, scopes=SCOPES
-        )
+        if not os.path.isfile(TOKEN_FILE):
+            raise RuntimeError(
+                "Google Calendar isn't connected yet — an admin needs to visit "
+                "/connect-calendar to authorize it (see calendar_service.py)."
+            )
+        credentials = _load_credentials()
         _service = build("calendar", "v3", credentials=credentials, cache_discovery=False)
     return _service
 

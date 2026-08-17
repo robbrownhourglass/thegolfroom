@@ -5,6 +5,7 @@ venv/
 .env
 .DS_Store
 
-# Google Calendar service-account credentials — never commit these.
-service_account.json
+# Google Calendar OAuth credentials — never commit these.
+client_secret.json
+token.json
 *.serviceaccount.json

@@ -34,11 +34,15 @@ a request writes a **tentative** hold onto that calendar for him to confirm
 or decline — it never auto-books. Until it's connected, `/bookings` quietly
 falls back to a plain contact form instead of breaking.
 
-To connect it, see the full step-by-step setup guide in the docstring at
-the top of `calendar_service.py` (create a Google Cloud service account,
-share Eamonn's calendar with it, then set two environment variables:
-`GOOGLE_SERVICE_ACCOUNT_FILE` and `GOOGLE_CALENDAR_ID`). That setup needs
-Eamonn's own Google account access, so it can't be done from here.
+Auth is via OAuth "Sign in with Google" — Eamonn authorizes the app once with
+his own Google account rather than sharing his calendar with a robot
+identity. To connect it, see the full step-by-step setup guide in the
+docstring at the top of `calendar_service.py`: create a Google Cloud OAuth
+client, save its downloaded JSON as `client_secret.json`, set an
+`ADMIN_SETUP_TOKEN` environment variable, then (as Eamonn) visit
+`/connect-calendar?token=<that value>` once and click through Google's
+sign-in. That setup needs Eamonn's own Google account access, so it can't be
+done from here.
 
 Business rules (hours, session length, how many days ahead to show, minimum
 notice) are constants at the top of `calendar_service.py` — edit them there
@@ -56,7 +60,8 @@ if Eamonn's actual availability differs.
   the original site's voucher shop uses a Wix Stores widget that wasn't
   replicated here.
 - Images and copy were pulled directly from the live site's public pages.
-- `app.secret_key` in `app.py` is a placeholder — replace it with a real
-  secret (e.g. from an environment variable) before deploying.
-- `service_account.json` (once you add it) and any `*.serviceaccount.json`
-  file are gitignored — never commit real Google credentials.
+- `app.secret_key` reads from a `FLASK_SECRET_KEY` environment variable
+  (falling back to a dev-only placeholder) — set that before deploying, since
+  it also protects the OAuth sign-in against CSRF, not just flash messages.
+- `client_secret.json` and `token.json` (created once Eamonn completes
+  `/connect-calendar`) are gitignored — never commit real Google credentials.
