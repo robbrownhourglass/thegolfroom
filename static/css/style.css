@@ -529,58 +529,105 @@ section { padding: 90px 0; }
 .info-strip { text-align: center; margin-bottom: 3em; }
 .info-strip a { text-decoration: underline; }
 
-/* Booking slot picker */
-.demo-banner {
-  max-width: 780px;
-  margin: 0 auto 2.5em;
-  padding: 14px 18px;
-  border-radius: var(--radius);
-  background: #4a3a10;
-  border: 1px solid #8a6a1f;
-  color: #f3d98b;
-  font-size: 0.9rem;
-  line-height: 1.6;
+/* Booking calendar — a real Mon-Fri week grid, Google-Calendar-style */
+.calendar-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 900px;
+  margin: 0 auto 1.8em;
 }
-.demo-banner code { background: rgba(0,0,0,0.25); padding: 0.1em 0.4em; border-radius: 3px; }
-.slot-picker { max-width: 780px; margin: 0 auto; }
-.slot-day { margin-bottom: 2em; }
-.slot-day h3 {
+.calendar-range {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  letter-spacing: 0.03em;
   color: var(--white);
-  text-transform: none;
-  font-family: "Work Sans", sans-serif;
-  font-weight: 400;
-  letter-spacing: normal;
-  font-size: 1.05rem;
-  margin-bottom: 0.8em;
-  padding-bottom: 0.5em;
-  border-bottom: 1px solid #3a3a3a;
+  font-size: 1rem;
 }
-.slot-row { display: flex; flex-wrap: wrap; gap: 10px; }
-.slot-picker input[type="radio"] {
+.btn-outline.is-disabled { opacity: 0.3; pointer-events: none; }
+
+.week-grid-wrap { max-width: 900px; margin: 0 auto; overflow-x: auto; }
+.week-grid {
+  display: grid;
+  grid-template-columns: 60px repeat(5, minmax(96px, 1fr));
+  gap: 3px;
+  min-width: 620px;
+}
+.grid-corner { background: transparent; }
+.grid-day-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 4px 0 10px;
+}
+.grid-day-header .dow {
+  font-family: "Poppins", sans-serif;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--white);
+}
+.grid-day-header .dnum { font-size: 0.78rem; color: var(--muted-on-dark); }
+.grid-time-label {
+  font-size: 0.7rem;
+  color: var(--muted-on-dark);
+  text-align: right;
+  padding: 12px 8px 0 0;
+  white-space: nowrap;
+}
+.grid-cell {
+  position: relative;
+  height: 40px;
+  border-radius: 3px;
+}
+.grid-cell.open {
+  background: rgba(232, 192, 97, 0.10);
+  border: 1px solid var(--gold);
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+.grid-cell.open:hover { background: rgba(232, 192, 97, 0.3); }
+.grid-cell.booked {
+  background: repeating-linear-gradient(45deg, rgba(255,255,255,0.03) 0 6px, rgba(255,255,255,0.07) 6px 12px);
+  border: 1px solid #333;
+}
+.grid-cell.past { background: transparent; border: 1px dashed #262626; }
+.week-grid input[type="radio"] {
   position: absolute;
   opacity: 0;
   width: 1px; height: 1px;
 }
-.slot-btn {
-  display: inline-block;
-  padding: 0.6em 1.1em;
-  border: 1px solid var(--gold);
-  border-radius: var(--radius);
-  color: var(--gold);
-  font-family: "Poppins", sans-serif;
-  font-weight: 700;
-  font-size: 0.82rem;
-  cursor: pointer;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-.slot-btn:hover { background: rgba(232, 192, 97, 0.12); }
-.slot-picker input[type="radio"]:checked + .slot-btn {
+.week-grid input[type="radio"]:checked + .grid-cell.open {
   background: var(--gold);
-  color: var(--black);
+  border-color: var(--gold);
 }
-.slot-picker input[type="radio"]:focus-visible + .slot-btn {
+.week-grid input[type="radio"]:focus-visible + .grid-cell.open {
   outline: 2px solid var(--white);
   outline-offset: 2px;
+}
+
+.grid-legend {
+  display: flex;
+  justify-content: center;
+  gap: 22px;
+  margin: 1.4em 0 0;
+  font-size: 0.78rem;
+  color: var(--muted-on-dark);
+}
+.grid-legend span { display: inline-flex; align-items: center; gap: 6px; }
+.grid-legend .swatch { width: 12px; height: 12px; border-radius: 2px; display: inline-block; }
+.grid-legend .swatch.open { background: rgba(232, 192, 97, 0.25); border: 1px solid var(--gold); }
+.grid-legend .swatch.booked { background: rgba(255,255,255,0.07); border: 1px solid #333; }
+.grid-legend .swatch.past { border: 1px dashed #262626; }
+
+@media (max-width: 700px) {
+  .week-grid { grid-template-columns: 46px repeat(5, minmax(72px, 1fr)); }
+  .grid-time-label { font-size: 0.62rem; padding-top: 10px; }
+  .grid-cell { height: 34px; }
 }
 
 /* ---------- Footer ---------- */

@@ -12,37 +12,51 @@
 
 <section class="section-charcoal" style="padding-top: 60px;">
   <div class="wrap">
-    {% if demo %}
-    <div class="demo-banner">
-      <strong>Demo mode.</strong> Google Calendar isn't connected yet, so the slots below
-      are made-up sample availability (not real bookings) — this is here so the workflow
-      can be tested before it goes live. See <code>calendar_service.py</code> to connect
-      the real thing.
-    </div>
-    {% endif %}
     <form method="post" id="booking-form">
-      <div class="slot-picker">
-        {% set has_any_slots = days|selectattr('slots')|list|length > 0 %}
-        {% if not has_any_slots %}
-          <p style="text-align:center;">There's nothing open in the next couple of weeks right now — please <a href="{{ url_for('contact') }}" style="text-decoration:underline;">get in touch directly</a> and Eamonn will find you a time.</p>
+      <input type="hidden" name="week" value="{{ week }}">
+
+      <div class="calendar-nav">
+        {% if week > 0 %}
+          <a class="btn-outline" href="{{ url_for('bookings', week=week-1) }}">&larr; Previous Week</a>
         {% else %}
-          {% for day in days %}
-            {% if day.slots %}
-            <div class="slot-day">
-              <h3>{{ day.label }}</h3>
-              <div class="slot-row">
-                {% for slot in day.slots %}
-                <input type="radio" name="slot" value="{{ slot.iso }}" id="slot-{{ slot.iso }}" required>
-                <label class="slot-btn" for="slot-{{ slot.iso }}">{{ slot.label }}</label>
-                {% endfor %}
-              </div>
-            </div>
-            {% endif %}
-          {% endfor %}
+          <span class="btn-outline is-disabled">&larr; Previous Week</span>
+        {% endif %}
+        <div class="calendar-range">{{ grid.week_start_label }} &ndash; {{ grid.week_end_label }}</div>
+        {% if week < max_week %}
+          <a class="btn-outline" href="{{ url_for('bookings', week=week+1) }}">Next Week &rarr;</a>
+        {% else %}
+          <span class="btn-outline is-disabled">Next Week &rarr;</span>
         {% endif %}
       </div>
 
-      {% if has_any_slots %}
+      <div class="week-grid-wrap">
+        <div class="week-grid">
+          <div class="grid-corner"></div>
+          {% for day in grid.days %}
+            <div class="grid-day-header"><span class="dow">{{ day.dow }}</span><span class="dnum">{{ day.day_num }}</span></div>
+          {% endfor %}
+
+          {% for row in grid.hours %}
+            <div class="grid-time-label">{{ row.label }}</div>
+            {% for cell in row.cells %}
+              {% if cell.status == 'open' %}
+                <input type="radio" name="slot" value="{{ cell.iso }}" id="slot-{{ cell.iso }}" required>
+                <label class="grid-cell open" for="slot-{{ cell.iso }}"></label>
+              {% elif cell.status == 'booked' %}
+                <div class="grid-cell booked" title="Already booked"></div>
+              {% else %}
+                <div class="grid-cell past"></div>
+              {% endif %}
+            {% endfor %}
+          {% endfor %}
+        </div>
+      </div>
+      <div class="grid-legend">
+        <span><i class="swatch open"></i> Open</span>
+        <span><i class="swatch booked"></i> Booked</span>
+        <span><i class="swatch past"></i> Unavailable</span>
+      </div>
+
       <div class="form-card" style="margin-top: 3em;">
         <h2>Your Details</h2>
         <div class="enquiry">
@@ -67,7 +81,6 @@
           </div>
         </div>
       </div>
-      {% endif %}
     </form>
   </div>
 </section>

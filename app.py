@@ -152,9 +152,9 @@ def free_practice_guide():
 
 @app.route("/bookings", methods=["GET", "POST"])
 def bookings():
-    # While Google Calendar isn't connected yet, run in DEMO MODE: the real
-    # slot-picker UI against made-up sample availability, clearly labelled,
-    # so the booking workflow can be tested before /connect-calendar is done.
+    # While Google Calendar isn't connected yet, run in DEMO MODE: the same
+    # real week-calendar UI against made-up sample availability, so the full
+    # booking workflow can be built/tested before /connect-calendar is done.
     # If it IS connected but something goes wrong live (API error, revoked
     # token, etc.) we deliberately do NOT fall back to demo data — that
     # would risk showing a real visitor fake availability — we fall back to
@@ -163,6 +163,7 @@ def bookings():
 
     if request.method == "POST":
         slot_iso = request.form.get("slot", "").strip()
+        week = request.form.get("week", "0")
         name = request.form.get("name", "").strip()
         email = request.form.get("email", "").strip()
         phone = request.form.get("phone", "").strip()
@@ -170,37 +171,34 @@ def bookings():
 
         if not slot_iso or not name or not email:
             flash("Please choose a time and fill in your name and email.", "error")
-            return redirect(url_for("bookings"))
+            return redirect(url_for("bookings", week=week))
 
         if demo:
             success, error = calendar_service.create_demo_booking_request(slot_iso, name, email, phone, notes)
-            confirm_message = (
-                "(Demo) Request received — in the real thing this would now be sent to "
-                "Eamonn for confirmation. Google Calendar isn't connected yet, so nothing "
-                "real just happened."
-            )
         else:
             try:
                 success, error = calendar_service.create_booking_request(slot_iso, name, email, phone, notes)
             except Exception:
                 app.logger.exception("Booking request failed")
                 success, error = False, "Something went wrong — please try again or contact us directly."
-            confirm_message = (
-                "Thanks! Your requested slot has been sent to Eamonn for confirmation — "
-                "you'll hear back shortly."
-            )
 
-        flash(confirm_message if success else (error or "Something went wrong — please try again."),
-              "success" if success else "error")
-        return redirect(url_for("bookings"))
+        flash(
+            "Thanks! Your requested slot has been sent to Eamonn for confirmation — you'll hear back shortly."
+            if success else (error or "Something went wrong — please try again."),
+            "success" if success else "error",
+        )
+        return redirect(url_for("bookings", week=week))
 
+    week = calendar_service.clamp_week(request.args.get("week", 0, type=int) or 0)
     try:
-        days = calendar_service.get_demo_slots() if demo else calendar_service.get_available_slots()
+        grid = calendar_service.get_demo_week_slots(week) if demo else calendar_service.get_week_slots(week)
     except Exception:
         app.logger.exception("Failed to load calendar availability")
         return render_template("bookings_fallback.html")
 
-    return render_template("bookings.html", days=days, demo=demo)
+    return render_template(
+        "bookings.html", grid=grid, week=week, max_week=calendar_service.WEEKS_AHEAD - 1, demo=demo
+    )
 
 
 @app.route("/connect-calendar")

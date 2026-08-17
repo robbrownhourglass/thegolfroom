@@ -8,7 +8,7 @@ This uses OAuth "Sign in with Google" — Eamonn authorizes the app once with
 his own Google account (rather than sharing his calendar with a robot
 service-account identity), and this module:
 
-  1. Reads busy/free time on his calendar (`get_available_slots`) to work out
+  1. Reads busy/free time on his calendar (`get_week_slots`) to work out
      which 60-minute coaching slots are open, Mon-Fri 9am-5pm Europe/Dublin.
   2. Writes a TENTATIVE hold onto his calendar when someone requests a slot
      (`create_booking_request`) — it does NOT auto-confirm. Eamonn reviews
@@ -55,7 +55,7 @@ Google account access):
 
 Until step 7 is complete, `is_configured()` returns False and the booking
 page runs in DEMO MODE instead: it shows the real slot-picker UI against
-made-up sample availability (see `get_demo_slots` below) so the booking
+made-up sample availability (see `get_demo_week_slots` below) so the booking
 workflow can be built and tested end-to-end before Google Calendar is
 actually connected. The page clearly labels itself as demo/sample data —
 see the `demo` flag app.py passes to bookings.html.
@@ -78,7 +78,7 @@ BUSINESS_DAYS = {0, 1, 2, 3, 4}  # Monday=0 ... Sunday=6 (Mon-Fri)
 BUSINESS_START_HOUR = 9
 BUSINESS_END_HOUR = 17  # last session starts an hour before this
 SESSION_MINUTES = 60
-DAYS_AHEAD = 14  # how far out the slot picker looks
+WEEKS_AHEAD = 6  # how many weeks forward the calendar view can page
 MIN_NOTICE_HOURS = 24  # can't book a slot less than this far in advance
 
 CLIENT_SECRETS_FILE = os.environ.get("GOOGLE_CLIENT_SECRETS_FILE", "client_secret.json")
@@ -88,7 +88,7 @@ ADMIN_SETUP_TOKEN = os.environ.get("ADMIN_SETUP_TOKEN")
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 
 _service = None  # lazily-built, cached Calendar API client
-_slots_cache = {"expires": 0, "value": None}
+_week_cache = {}  # {week_offset: {"expires": ..., "value": ...}}
 CACHE_SECONDS = 120  # avoid hammering the API on every page view
 
 
@@ -176,60 +176,75 @@ def _overlaps(slot_start, slot_end, busy_periods):
     return False
 
 
-def _candidate_business_days(days_ahead=DAYS_AHEAD):
-    """Business days (skipping weekends) from today out to days_ahead, each
-    paired with its bookable candidate slot start times (respecting min notice)."""
+def _week_monday(week_offset):
+    """The Monday (tz-naive date) of the week `week_offset` weeks from this one."""
     today = datetime.now(BUSINESS_TZ).date()
+    this_monday = today - timedelta(days=today.weekday())
+    return this_monday + timedelta(weeks=week_offset)
+
+
+def clamp_week(week_offset):
+    """Weeks are pageable from this week (0) out to WEEKS_AHEAD-1."""
+    return max(0, min(week_offset, WEEKS_AHEAD - 1))
+
+
+def _build_week_grid(week_offset, is_busy):
+    """
+    Shared grid-builder for both real and demo availability: `is_busy(slot_start)`
+    decides whether each candidate hour is taken. Returns a Google-Calendar-style
+    week view — Mon-Fri columns, one row per bookable hour — ready for the template:
+      {week_offset, week_start_label, week_end_label,
+       days: [{date, dow, day_num}, ...],                     # 5 entries
+       hours: [{label, cells: [{status, iso}, ...]}, ...]}     # 8ish rows x 5 cells
+    `status` is one of "open" (clickable), "booked", or "past" (too soon/elapsed).
+    """
+    monday = _week_monday(week_offset)
+    days = [monday + timedelta(days=i) for i in range(5)]
     earliest_bookable = datetime.now(BUSINESS_TZ) + timedelta(hours=MIN_NOTICE_HOURS)
-    out = []
-    for offset in range(days_ahead + 1):
-        day = today + timedelta(days=offset)
-        if day.weekday() not in BUSINESS_DAYS:
-            continue
-        candidates = [s for s in _business_slot_starts(day) if s >= earliest_bookable]
-        out.append((day, candidates))
-    return out
 
+    hours = []
+    for slot_start_today in _business_slot_starts(days[0]):
+        hour = slot_start_today.hour
+        cells = []
+        for day in days:
+            slot_start = datetime(day.year, day.month, day.day, hour, 0, tzinfo=BUSINESS_TZ)
+            if slot_start < earliest_bookable:
+                status = "past"
+            elif is_busy(slot_start):
+                status = "booked"
+            else:
+                status = "open"
+            cells.append({"status": status, "iso": slot_start.isoformat()})
+        hours.append({"label": slot_start_today.strftime("%-I %p"), "cells": cells})
 
-def _slot_dict(slot_start):
     return {
-        "start": slot_start,
-        "end": slot_start + timedelta(minutes=SESSION_MINUTES),
-        "iso": slot_start.isoformat(),
-        "label": slot_start.strftime("%-I:%M %p"),
+        "week_offset": week_offset,
+        "week_start_label": monday.strftime("%-d %b"),
+        "week_end_label": days[-1].strftime("%-d %b %Y"),
+        "days": [{"date": d, "dow": d.strftime("%a"), "day_num": d.strftime("%-d")} for d in days],
+        "hours": hours,
     }
 
 
-def get_available_slots(use_cache=True):
-    """
-    Returns a list of {date, label, slots: [{start, end, iso, label}, ...]}
-    for each business day between now and DAYS_AHEAD days out, with slots
-    that are already busy (or too soon / in the past) filtered out.
-    """
+def get_week_slots(week_offset=0, use_cache=True):
+    """Real Google-Calendar-backed week grid (see _build_week_grid)."""
+    week_offset = clamp_week(week_offset)
     now = time.time()
-    if use_cache and _slots_cache["value"] is not None and _slots_cache["expires"] > now:
-        return _slots_cache["value"]
+    cached = _week_cache.get(week_offset)
+    if use_cache and cached and cached["expires"] > now:
+        return cached["value"]
 
-    today = datetime.now(BUSINESS_TZ).date()
-    range_start = datetime.now(BUSINESS_TZ)
-    range_end = datetime.combine(
-        today + timedelta(days=DAYS_AHEAD), datetime.min.time(), tzinfo=BUSINESS_TZ
-    )
+    monday = _week_monday(week_offset)
+    range_start = datetime.combine(monday, datetime.min.time(), tzinfo=BUSINESS_TZ)
+    range_end = datetime.combine(monday + timedelta(days=5), datetime.min.time(), tzinfo=BUSINESS_TZ)
     busy_periods = _fetch_busy_periods(range_start, range_end)
 
-    days = []
-    for day, candidates in _candidate_business_days():
-        day_slots = []
-        for slot_start in candidates:
-            slot_end = slot_start + timedelta(minutes=SESSION_MINUTES)
-            if _overlaps(slot_start, slot_end, busy_periods):
-                continue
-            day_slots.append(_slot_dict(slot_start))
-        days.append({"date": day, "label": day.strftime("%A %-d %B"), "slots": day_slots})
+    def is_busy(slot_start):
+        return _overlaps(slot_start, slot_start + timedelta(minutes=SESSION_MINUTES), busy_periods)
 
-    _slots_cache["value"] = days
-    _slots_cache["expires"] = now + CACHE_SECONDS
-    return days
+    grid = _build_week_grid(week_offset, is_busy)
+    _week_cache[week_offset] = {"value": grid, "expires": now + CACHE_SECONDS}
+    return grid
 
 
 # ---------------------------------------------------------------------------
@@ -245,17 +260,17 @@ DEMO_BOOKED_PER_DAY = 2
 _demo_requested_slots = set()  # iso strings the tester has "requested" this session
 
 
-def get_demo_slots():
-    days = []
-    for day, candidates in _candidate_business_days():
+def get_demo_week_slots(week_offset=0):
+    week_offset = clamp_week(week_offset)
+
+    def is_busy(slot_start):
+        day = slot_start.date()
         rng = random.Random(day.toordinal())  # stable per calendar day, not per request
+        candidates = _business_slot_starts(day)
         pre_booked = set(rng.sample(candidates, k=min(DEMO_BOOKED_PER_DAY, len(candidates))))
-        day_slots = [
-            _slot_dict(s) for s in candidates
-            if s not in pre_booked and s.isoformat() not in _demo_requested_slots
-        ]
-        days.append({"date": day, "label": day.strftime("%A %-d %B"), "slots": day_slots})
-    return days
+        return slot_start in pre_booked or slot_start.isoformat() in _demo_requested_slots
+
+    return _build_week_grid(week_offset, is_busy)
 
 
 def create_demo_booking_request(slot_start_iso, name, email, phone, notes):
@@ -316,7 +331,7 @@ def create_booking_request(slot_start_iso, name, email, phone, notes):
         service.events().insert(
             calendarId=CALENDAR_ID, body=event, sendUpdates="all"
         ).execute()
-        _slots_cache["expires"] = 0  # invalidate cache so this slot disappears immediately
+        _week_cache.clear()  # invalidate cache so this slot disappears immediately
         return True, None
     except HttpError as exc:
         return False, f"Google Calendar error — please try again or contact us directly. ({exc.status_code})"
