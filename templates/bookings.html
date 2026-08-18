@@ -41,7 +41,7 @@
             {% for cell in row.cells %}
               {% if cell.status == 'open' %}
                 <input type="radio" name="slot" value="{{ cell.iso }}" id="slot-{{ cell.iso }}" required>
-                <label class="grid-cell open" for="slot-{{ cell.iso }}"></label>
+                <label class="grid-cell open" for="slot-{{ cell.iso }}" data-slot-label="{{ grid.days[loop.index0].dow }} {{ grid.days[loop.index0].day_num }} at {{ row.label }}"></label>
               {% elif cell.status == 'booked' %}
                 <div class="grid-cell booked" title="Already booked"></div>
               {% else %}
@@ -57,8 +57,9 @@
         <span><i class="swatch past"></i> Unavailable</span>
       </div>
 
-      <div class="form-card" style="margin-top: 3em;">
+      <div class="form-card" id="details-card" style="margin-top: 3em;">
         <h2>Your Details</h2>
+        <p id="selected-slot" class="selected-slot is-empty">No time selected yet — click an open slot above to continue.</p>
         <div class="enquiry">
           <div>
             <label for="name">Name</label>
@@ -84,4 +85,25 @@
     </form>
   </div>
 </section>
+
+<script>
+  // Progressive enhancement only — the form works fine without this (native
+  // HTML5 "required" on the radio group still blocks submitting with no
+  // slot picked). This just makes it obvious that clicking a slot leads
+  // somewhere: show what got picked, and jump down to the details form.
+  (function () {
+    var summary = document.getElementById('selected-slot');
+    var detailsCard = document.getElementById('details-card');
+    if (!summary) return;
+    document.querySelectorAll('.week-grid input[type="radio"]').forEach(function (radio) {
+      radio.addEventListener('change', function () {
+        var label = document.querySelector('label[for="' + radio.id + '"]');
+        var text = label ? label.getAttribute('data-slot-label') : '';
+        summary.textContent = 'Selected: ' + text + ' — fill in your details below to request it.';
+        summary.classList.remove('is-empty');
+        if (detailsCard) detailsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    });
+  })();
+</script>
 {% endblock %}

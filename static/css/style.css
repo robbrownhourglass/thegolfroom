@@ -482,6 +482,22 @@ section { padding: 90px 0; }
   font-size: 1.7rem;
   letter-spacing: normal;
 }
+.selected-slot {
+  margin: -0.4em 0 1.6em;
+  padding: 10px 14px;
+  border-radius: var(--radius);
+  font-size: 0.88rem;
+  font-weight: 600;
+  background: #2d2410;
+  color: var(--gold);
+  border: 1px solid #6b551f;
+}
+.selected-slot.is-empty {
+  background: transparent;
+  color: #4a4a4a;
+  border: 1px dashed #9a9a9a;
+  font-weight: 400;
+}
 .enquiry {
   display: grid;
   grid-template-columns: 1fr 1fr;
